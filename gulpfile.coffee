@@ -13,10 +13,12 @@ paths =
   vendor_src: ['bower_components/bootstrap/dist/**/*.*']
   vendorjs_src: ['bower_components/jquery/dist/*.js']
 
+server = livereload()
+
 #default task - build project
 gulp.task 'default', ['build']
 gulp.task 'build', ['coffee', 'views', 'vendor']
-gulp.task 'dev', ['watch','serve','livereload']
+gulp.task 'dev', ['build', 'watch','liveupdate']
 
 #update server side scripts
 gulp.task 'coffee_server', ->
@@ -28,10 +30,12 @@ gulp.task 'coffee_client', ->
 
 gulp.task 'coffee', ['coffee_server','coffee_client']
 
+
 #update server side view
 gulp.task 'views', ->
   gulp.src paths.views
   .pipe gulp.dest paths.build+'/views'
+
 
 #update the client vendor scripts and styles. Ex: bootstrap, jquery, etc.
 gulp.task 'vendor', (cb)->
@@ -43,24 +47,33 @@ gulp.task 'vendor', (cb)->
     .pipe gulp.dest paths.build+'/public/lib/js'
   )
 
+
 #watch all folders and build the projects as file changes is made.
 gulp.task 'watch', ->
   gulp.watch paths.coffee_server, ['coffee_server']
   gulp.watch paths.coffee_client, ['coffee_client']
   gulp.watch paths.views, ['views']
 
+
 #clean the build folder.
 gulp.task 'clean', ->
   gulp.src(paths.build+"/", read: false)
   .pipe(clean())
 
-gulp.task 'serve', ['build'], ->
-  nodemon script: './build/app.js', watch:'build', ignore:'build/public/'
 
-gulp.task 'livereload', ->
-  server = livereload()
-  gulp.watch(paths.build+'/**')
-  .on 'change', (file)->server.changed(file.path)
+gulp.task 'liveupdate', ->
+  nodemon
+    script: './build/app.js',
+    watch:'src',
+    ext: 'coffee',
+    ignore:['./build/public/**','./build/views/**'],
+    delay: 2
+
+  gulp.watch([paths.build+'/public/**', paths.build+'/views/**'])
+  .on 'change', (file)->
+    console.log('client in folder changed '+file.path)
+    server.changed(file.path)
+
 
 #helper functions
 
